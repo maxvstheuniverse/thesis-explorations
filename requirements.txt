@@ -1,4 +1,4 @@
 imageio==2.6.1
 numpy==1.18.2
-pycodestyle==2.5.0
 mypy==0.770
+pycodestyle==2.5.0

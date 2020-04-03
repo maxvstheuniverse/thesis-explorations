@@ -17,7 +17,7 @@ setup(
     name='thesis-explorations',
     version='0.1.0',
     license='BSD-3 Clause',
-    description='The collection of various experiments and explorations for my MSc thesis project.',
+    description='Collection of various experiments and explorations for my MSc thesis project.',
     long_description="",
     author='Max Peeperkorn',
     author_email='post@maxpeeperkorn.nl',
