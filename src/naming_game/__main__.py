@@ -90,7 +90,7 @@ def run_simulation(num_agents, num_games, num_objects):
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"output/plot-{t}")
+    plt.savefig(f"output/plot-{t}.eps")
 
     # -- Wrap up.
     print(f"Finished {num_games} games!")
