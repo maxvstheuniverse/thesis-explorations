@@ -2,18 +2,16 @@ import argparse
 import random
 import os
 import matplotlib.pyplot as plt
-
-from functools import reduce
-from time import strftime, localtime
+import time
 
 from naming_game.Agent import Agent
 
 
 def run_simulation(num_agents, num_games, num_objects):
-    t = strftime('%Y-%m-%dT%H-%M-%S', localtime())
+    t = time.strftime('%Y-%m-%dT%H-%M-%S', time.localtime())
 
     # -- Setup
-    agents = [Agent(i, args.num_objects) for i in range(args.num_agents)]
+    agents = [Agent(i, num_objects) for i in range(num_agents)]
     games = range(1, num_games + 1)
 
     successes = []
@@ -65,7 +63,7 @@ def run_simulation(num_agents, num_games, num_objects):
 
     # -- Output
 
-    # -- write log
+    # -- export log
     with open(os.path.join(os.getcwd(), "output", f"log-{t}.csv"), "w") as file:
         header = ";".join(["Game", "Object", "Success", "Alignment Success",
                            "Speaker", "Vocabulary", "Listener", "Vocabulary",
@@ -73,7 +71,7 @@ def run_simulation(num_agents, num_games, num_objects):
         file.write("\n".join([header] + logs))
         file.close()
 
-    # -- write plot
+    # -- export plot
     fig, ax = plt.subplots(1, 1, figsize=(8, 5))
     window = 40
 
@@ -90,15 +88,12 @@ def run_simulation(num_agents, num_games, num_objects):
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"output/plot-{t}.eps")
-
-    # -- Wrap up.
-    print(f"Finished {num_games} games!")
+    plt.savefig(f"output/plot-{t}.svg")
 
 
 def main(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--agents", type=int, required=True, dest="num_agents",
+    parser.add_argument("-a", "--agents", type=int, default=10, dest="num_agents",
                         help="The number of agents in the simulation.")
     parser.add_argument("-g", "--games", type=int, default=100, dest="num_games",
                         help="The number of games played. Default: 100")
@@ -107,5 +102,7 @@ def main(args=None):
     args = parser.parse_args()
 
     #  Start simulation
+    start_time = time.time()
     run_simulation(args.num_agents, args.num_games, args.num_objects)
+    print(f"Finished {args.num_games} games in {time.time() - start_time:0.03f} seconds!")
     return 0
