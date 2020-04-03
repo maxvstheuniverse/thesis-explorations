@@ -8,15 +8,17 @@ syllables = ["wa", "ba", "ra", "ta", "na", "ka", "la", "pa", "za", "ma", "we", "
 class Agent:
     """ Base class for the agents """
 
-    def __init__(self, identifier, num_objects=8):
+    def __init__(self, identifier, num_objects):
         self.brain = None
         self.identifier = identifier
         self.vocabulary = [[] for _ in range(num_objects)]
 
     def get_vocabulary(self):
+        """ Returns the vocabulary """
         return self.vocabulary
 
     def print_vocabulary(self):
+        """ Returns the vocabulary as a formatted string. """
         return '[' + '] ['.join(map(lambda v: ','.join(v), self.vocabulary)) + ']'
 
     def speak(self, obj):

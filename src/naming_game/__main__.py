@@ -9,18 +9,22 @@ from time import strftime, localtime
 from naming_game.Agent import Agent
 
 
-def run_simulation(agents, num_games):
+def run_simulation(num_agents, num_games, num_objects):
     t = strftime('%Y-%m-%dT%H-%M-%S', localtime())
+
+    # -- Setup
+    agents = [Agent(i, args.num_objects) for i in range(args.num_agents)]
     games = range(1, num_games + 1)
 
-    # -- setup metrics
-    words_invented = 0
-    invention_rate = 0
     successes = []
     alignments = []
-    logs = ["Game;Object;Success;Alignment Success;Speaker;Listener;Word Invented;Word Invention Rate"]
 
-    # -- run the simulation
+    words_invented = 0
+    invention_rate = 0
+
+    logs = []
+
+    # -- Run
     for game in games:
         speaker, listener = random.choices(agents, k=2)
         obj = random.randint(0, 7)
@@ -53,24 +57,30 @@ def run_simulation(agents, num_games):
         alignments.append(alignment)
 
         metrics = [game, obj, success, alignment,
-                   speaker.print_vocabulary(), listener.print_vocabulary(),
+                   speaker.identifier, speaker.print_vocabulary(),
+                   listener.identifier, listener.print_vocabulary(),
                    word if invented else '', invention_rate]
 
         logs.append(";".join(map(lambda x: str(x), metrics)))
 
+    # -- Output
+
     # -- write log
     with open(os.path.join(os.getcwd(), "output", f"log-{t}.csv"), "w") as file:
-        file.write("\n".join(logs))
+        header = ";".join(["Game", "Object", "Success", "Alignment Success",
+                           "Speaker", "Vocabulary", "Listener", "Vocabulary",
+                           "Word Invented", "Word Invention Rate"])
+        file.write("\n".join([header] + logs))
         file.close()
 
-    # -- output plot
+    # -- write plot
     fig, ax = plt.subplots(1, 1, figsize=(8, 5))
     window = 40
 
     y_success = [sum(successes[j] for j in range(i - window, i) if j > 0) / window for i in range(num_games)]
     y_alignment = [sum(alignments[j] for j in range(i - window, i) if j > 0) / window for i in range(num_games)]
 
-    ax.set_title(f"Naming Game (Agents {len(agents)}, Games: {num_games})")
+    ax.set_title(f"Naming Game (Agents {len(agents)}, Games: {num_games}, Objects: {num_objects})")
     ax.plot(games, y_success, label="Success")
     ax.plot(games, y_alignment, label="Alignment")
     ax.set_ylabel("%")
@@ -82,9 +92,8 @@ def run_simulation(agents, num_games):
     plt.tight_layout()
     plt.savefig(f"output/plot-{t}")
 
-    # -- Wrapped up.
+    # -- Wrap up.
     print(f"Finished {num_games} games!")
-    return 0
 
 
 def main(args=None):
@@ -93,11 +102,10 @@ def main(args=None):
                         help="The number of agents in the simulation.")
     parser.add_argument("-g", "--games", type=int, default=100, dest="num_games",
                         help="The number of games played. Default: 100")
+    parser.add_argument("-o", "--objects", type=int, default=8, dest="num_objects",
+                        help="The number of objects used in the game. Default: 8")
     args = parser.parse_args()
 
-    #  Generate Agents
-    agents = [Agent(i) for i in range(args.num_agents)]
-
-    #  Run Simulation
-    exit_code = run_simulation(agents, args.num_games)
-    return exit_code
+    #  Start simulation
+    run_simulation(args.num_agents, args.num_games, args.num_objects)
+    return 0
