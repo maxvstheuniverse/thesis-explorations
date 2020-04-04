@@ -44,8 +44,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'ng=naming_game.__main__:main'
-            # 'asoasf-vae-interpreter=asoasf_vae.__main__:interpreter',
+            'bng=basic_naming_game.__main__:main',
+            'ang=ae_naming_game.__main__:main'
         ]
     },
 )
