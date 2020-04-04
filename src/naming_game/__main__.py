@@ -61,8 +61,8 @@ def export(results, t, args):
     games = range(args.games)
     window = 40
 
-    success = [row[2] for row in results]
-    alignment = [row[3] for row in results]
+    results_t = list(zip(*results))  # -- transpose results list
+    success, alignment = results_t[2], results_t[3]
 
     y_success = [sum(success[j] for j in range(i - window, i) if j > 0) / window for i in games]
     y_alignment = [sum(alignment[j] for j in range(i - window, i) if j > 0) / window for i in games]
@@ -93,7 +93,6 @@ def main(args=None):
     #  Start simulation
     start_time = time.time()
     results = run(args)
-
     print(f"Finished {args.games} games in {time.time() - start_time:0.03f} seconds!")
 
     export(results, start_time, args)
