@@ -19,6 +19,8 @@ def play(game_id, agents):
     if invented:
         speaker.add_word(obj, word)
 
+    speaker_vocab, listener_vocab = speaker.print_vocabulary(), listener.print_vocabulary()
+
     if interpreted_obj == obj:
         if len(listener.vocabulary[obj]) == 1 and len(speaker.vocabulary[obj]) == 1:
             alignment = 1
@@ -30,8 +32,8 @@ def play(game_id, agents):
         listener.add_word(obj, word)
 
     return [game_id, obj, success, alignment,
-            speaker.identifier, speaker.print_vocabulary(),
-            listener.identifier, listener.print_vocabulary(),
+            speaker.identifier, speaker_vocab,
+            listener.identifier, listener_vocab,
             word if invented else '']
 
 
@@ -56,7 +58,7 @@ def export(results, t, args):
         file.write("\n".join([header] + [";".join(map(lambda x: str(x), row)) for row in results]))
         file.close()
 
-    # -- export metrics
+    # -- export plots
     fig, ax = plt.subplots(1, 1, figsize=(8, 5))
     games = range(args.games)
     window = 40
