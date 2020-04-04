@@ -19,7 +19,7 @@ class Agent:
 
     def print_vocabulary(self):
         """ Returns the vocabulary as a formatted string. """
-        return '[' + '] ['.join(map(lambda v: ','.join(v), self.vocabulary)) + ']'
+        return '[' + '] ['.join(map(lambda v: ', '.join(v), self.vocabulary)) + ']'
 
     def speak(self, obj):
         """ Returns a tuple of a word, and if it was invented. """

@@ -7,99 +7,94 @@ import time
 from naming_game.Agent import Agent
 
 
-def run_simulation(num_agents, num_games, num_objects):
-    t = time.strftime('%Y-%m-%dT%H-%M-%S', time.localtime())
+def play(game_id, agents):
+    """ Play a game, provide a game id and all agents. """
+    speaker, listener = random.choices(agents, k=2)
+    obj = random.randint(0, 7)
+    success, alignment = 0, 0
 
-    # -- Setup
-    agents = [Agent(i, num_objects) for i in range(num_agents)]
-    games = range(1, num_games + 1)
+    word, invented = speaker.speak(obj)
+    interpreted_obj = listener.listen(obj, word)
 
-    metrics = {"logs": [], "success": [], "alignment": [], "words_invented": 0, "invention_rate": 0,
-               "time": t, "games": num_games, "agents": num_agents, "objects": num_objects}
+    if invented:
+        speaker.add_word(obj, word)
 
-    # -- Run
-    for game in games:
-        speaker, listener = random.choices(agents, k=2)
-        obj = random.randint(0, 7)
-        success = 0
-        alignment = 0
+    if interpreted_obj == obj:
+        if len(listener.vocabulary[obj]) == 1 and len(speaker.vocabulary[obj]) == 1:
+            alignment = 1
+        success = 1
 
-        word, invented = speaker.speak(obj)
-        interpreted_obj = listener.listen(obj, word)
+        speaker.adopt(obj, word)
+        listener.adopt(obj, word)
+    else:
+        listener.add_word(obj, word)
 
-        if invented:
-            speaker.add_word(obj, word)
-            metrics['words_invented'] += 1
-
-        if interpreted_obj == obj:
-            if len(listener.vocabulary[obj]) == 1 and len(speaker.vocabulary[obj]) == 1:
-                alignment = 1
-            success = 1
-
-            speaker.adopt(obj, word)
-            listener.adopt(obj, word)
-        else:
-            listener.add_word(obj, word)
-
-        metrics['success'].append(success)
-        metrics['alignment'].append(alignment)
-        metrics['invention_rate'] = metrics['words_invented'] / game
-
-        log = [game, obj, success, alignment,
-               speaker.identifier, speaker.print_vocabulary(),
-               listener.identifier, listener.print_vocabulary(),
-               word if invented else '', metrics["invention_rate"]]
-
-        metrics["logs"].append(log)
-
-    return metrics
+    return [game_id, obj, success, alignment,
+            speaker.identifier, speaker.print_vocabulary(),
+            listener.identifier, listener.print_vocabulary(),
+            word if invented else '']
 
 
-def export(metrics):
+def run(args):
+    """ Run the simulation. """
+    agents = [Agent(i, args.objects) for i in range(args.agents)]
+    games = range(1, args.games + 1)
+
+    return [play(game_id, agents) for game_id in games]
+
+
+def export(results, t, args):
+    """ Export the results. """
+    t = time.strftime("%Y-%m-%dT%H-%M-%S", time.localtime(t))
+
     # -- export logs
-    with open(os.path.join(os.getcwd(), "output", f"log-{metrics['time']}.csv"), "w") as file:
+    with open(os.path.join(os.getcwd(), "output", f"log-{t}.csv"), "w") as file:
         header = ";".join(["Game", "Object", "Success", "Alignment Success",
                            "Speaker", "Vocabulary", "Listener", "Vocabulary",
-                           "Word Invented", "Word Invention Rate"])
+                           "Word Invented"])
 
-        file.write("\n".join([header] + [";".join(map(lambda x: str(x), log)) for log in metrics["logs"]]))
+        file.write("\n".join([header] + [";".join(map(lambda x: str(x), row)) for row in results]))
         file.close()
 
     # -- export metrics
     fig, ax = plt.subplots(1, 1, figsize=(8, 5))
-    games = range(metrics["games"])
+    games = range(args.games)
     window = 40
 
-    y_success = [sum(metrics["success"][j] for j in range(i - window, i) if j > 0) / window for i in games]
-    y_alignment = [sum(metrics["alignment"][j] for j in range(i - window, i) if j > 0) / window for i in games]
+    success = [row[2] for row in results]
+    alignment = [row[3] for row in results]
 
-    ax.set_title(f"Naming Game (Agents {metrics['agents']}, Games: {metrics['games']}, Objects: {metrics['objects']})")
+    y_success = [sum(success[j] for j in range(i - window, i) if j > 0) / window for i in games]
+    y_alignment = [sum(alignment[j] for j in range(i - window, i) if j > 0) / window for i in games]
+
+    ax.set_title(f"Naming Game (Agents {args.agents}, Games: {args.games}, Objects: {args.objects})")
     ax.plot(games, y_success, label="Success")
     ax.plot(games, y_alignment, label="Alignment")
     ax.set_ylabel("%")
     ax.set_xlabel('Games')
     ax.set_ylim(0, 1)
-    ax.set_xlim(0, metrics["games"])
+    ax.set_xlim(0, args.games)
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"output/plot-{metrics['time']}.svg")
+    plt.savefig(f"output/plot-{t}.svg")
 
 
 def main(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--agents", type=int, default=10, dest="num_agents",
+    parser.add_argument("-a", "--agents", type=int, default=10, dest="agents",
                         help="The number of agents in the simulation.")
-    parser.add_argument("-g", "--games", type=int, default=2000, dest="num_games",
+    parser.add_argument("-g", "--games", type=int, default=2000, dest="games",
                         help="The number of games played. Default: 100")
-    parser.add_argument("-o", "--objects", type=int, default=8, dest="num_objects",
+    parser.add_argument("-o", "--objects", type=int, default=8, dest="objects",
                         help="The number of objects used in the game. Default: 8")
     args = parser.parse_args()
 
     #  Start simulation
     start_time = time.time()
-    metrics = run_simulation(args.num_agents, args.num_games, args.num_objects)
-    print(f"Finished {args.num_games} games in {time.time() - start_time:0.03f} seconds!")
+    results = run(args)
 
-    export(metrics)
+    print(f"Finished {args.games} games in {time.time() - start_time:0.03f} seconds!")
+
+    export(results, start_time, args)
     return 0
