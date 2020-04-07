@@ -1,5 +1,4 @@
 import random
-from copy import deepcopy
 
 syllables = ["wa", "ba", "ra", "ta", "na", "ka", "la", "pa", "za", "ma", "we", "be", "re", "te",
              "ne", "ke", "le", "pe", "ze", "me", "wi", "bi", "ri", "ti", "ni", "ki", "li", "pi",

@@ -1,30 +1,86 @@
 import tensorflow as tf
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
 
 
-x = np.load(os.path.join('data', 'sets', 'line_language.npy')) / 255.0
-y = x.flatten().reshape(1000, 256)
+tf.keras.backend.set_floatx('float64')
 
-latent_dim = 32
-batch_size = 4
 
-autoencoder = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape=(16, 16)),
-    tf.keras.layers.Dense(100, activation="relu"),
-    tf.keras.layers.Dense(latent_dim),
-    tf.keras.layers.Dense(100, activation="relu"),
-    tf.keras.layers.Dense(256, activation="sigmoid")
-])
+@tf.function
+def compute_loss(model, x):
+    y = model.decode(model.encode(x), apply_sigmoid=True)
+    return tf.reduce_mean(tf.square(tf.subtract(y, x))), y
 
-autoencoder.compile(loss="mean_squared_error", optimizer="adam", metrics=["accuracy"])
-autoencoder.summary()
-history = autoencoder.fit(x, y, epochs=250, batch_size=batch_size)
-autoencoder.save(os.path.join('data', 'models', 'autoencoder.h5'))
 
-pd.DataFrame(history.history).plot(figsize=(8, 5))
-plt.grid(True)
-plt.gca().set_ylim(0, 1)
-plt.savefig(os.path.join('output', 'autoencoder.svg'))
+@tf.function
+def compute_apply_gradients(model, x, optimizer):
+    with tf.GradientTape() as tape:
+        loss, _ = compute_loss(model, x)
+
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+
+def compute_loss_once(model, x):
+    y = model.decode(model.encode(x), apply_sigmoid=True)
+    return tf.reduce_mean(tf.square(tf.subtract(y, x))), y
+
+
+def compute_apply_gradients_once(model, x, optimizer):
+    with tf.GradientTape() as tape:
+        loss, _ = compute_loss_once(model, x)
+
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+
+class Autoencoder(tf.keras.Model):
+
+    def __init__(self, latent_dim=50):
+        super(Autoencoder, self).__init__()
+
+        self.latent_dim = latent_dim
+
+        self.encoder = tf.keras.Sequential([
+            tf.keras.layers.InputLayer((16, 16)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.Dense(latent_dim)
+        ])
+
+        self.decoder = tf.keras.Sequential([
+            tf.keras.layers.InputLayer((latent_dim,)),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.Dense(256),
+            tf.keras.layers.Reshape((16, 16))
+        ])
+
+    def load(self):
+        """ Load weights to models folder. """
+        self.encoder.load_weights(os.path.join('data', 'models', 'encoder.h5'))
+        self.decoder.load_weights(os.path.join('data', 'models', 'decoder.h5'))
+
+    def save(self):
+        """ Save weights to models folder. """
+        self.encoder.save(os.path.join('data', 'models', 'encoder.h5'))
+        self.decoder.save(os.path.join('data', 'models', 'decoder.h5'))
+
+    def sample(self, z=None):
+        """ Randomly sample from the Autoencoder """
+        if z is None:
+            z = tf.random.normal(shape=(1, self.latent_dim))
+        return self.decode(z, apply_sigmoid=True)
+
+    def encode(self, x):
+        """ Return the latent variables for input x. """
+        return self.encoder(x)
+
+    def decode(self, z, apply_sigmoid=False):
+        """ Returns the reconstruction using the given latent_vars """
+        logits = self.decoder(z)
+        if apply_sigmoid:
+            return tf.sigmoid(logits)
+        return logits
+
+    def summarize(self):
+        self.encoder.summary()
+        self.decoder.summary()
