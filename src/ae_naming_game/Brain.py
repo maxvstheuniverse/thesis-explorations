@@ -15,7 +15,6 @@ def compute_loss(model, x):
 def compute_apply_gradients(model, x, optimizer):
     with tf.GradientTape() as tape:
         loss, _ = compute_loss(model, x)
-
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
@@ -28,7 +27,6 @@ def compute_loss_once(model, x):
 def compute_apply_gradients_once(model, x, optimizer):
     with tf.GradientTape() as tape:
         loss, _ = compute_loss_once(model, x)
-
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 

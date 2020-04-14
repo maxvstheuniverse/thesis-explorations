@@ -7,7 +7,6 @@ import time
 
 from ae_naming_game.Agent import Agent
 
-
 tf.keras.backend.set_floatx('float64')
 
 
@@ -20,8 +19,6 @@ def play(game_id, agents):
     word, invented = speaker.speak(obj)
     interpreted_obj = listener.listen(obj, word)
 
-    # speaker_vocab, listener_vocab = speaker.print_vocabulary(), listener.print_vocabulary()
-
     if interpreted_obj == obj:
         if len(listener.vocabulary[obj]) == 1 and len(speaker.vocabulary[obj]) == 1:
             alignment = 1
@@ -32,18 +29,22 @@ def play(game_id, agents):
     else:
         listener.add_word(obj, word)
 
-    return [game_id, obj, success, alignment,
-            speaker.identifier,  # speaker_vocab,
-            listener.identifier]  # listener_vocab,
-            #word if invented else '']
+    return [game_id, obj, success, alignment, speaker.identifier, listener.identifier]
 
 
-def run(args):
+def run(args, t):
     """ Run the simulation. """
     agents = [Agent(i, args.objects) for i in range(args.agents)]
     games = range(1, args.games + 1)
 
-    return [play(game_id, agents) for game_id in games]
+    results = [play(game_id, agents) for game_id in games]
+
+    # -- export on random agents' vocabulary.
+    t = time.strftime("%Y-%m-%dT%H-%M-%S", time.localtime(t))
+    random_agent = random.choices(agents, k=1)
+    random_agent[0].print_vocabulary(t)
+
+    return resulst
 
 
 def export(results, t, args):
@@ -51,11 +52,9 @@ def export(results, t, args):
     t = time.strftime("%Y-%m-%dT%H-%M-%S", time.localtime(t))
 
     # -- export logs
-    with open(os.path.join(os.getcwd(), "output", f"log-{t}.csv"), "w") as file:
+    with open(os.path.join(os.getcwd(), "output", f"ae-log-{t}.csv"), "w") as file:
         header = ";".join(["Game", "Object", "Success", "Alignment Success",
-                           "Speaker",  # "Vocabulary",
-                           "Listener"])  # "Vocabulary",
-                           # "Word Invented"])
+                           "Speaker", "Listener"])
 
         file.write("\n".join([header] + [";".join(map(lambda x: str(x), row)) for row in results]))
         file.close()
@@ -81,7 +80,7 @@ def export(results, t, args):
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"output/plot-{t}.svg")
+    plt.savefig(f"output/ae-plot-{t}.svg")
 
 
 def main(args=None):
@@ -96,7 +95,7 @@ def main(args=None):
 
     #  Start simulation
     start_time = time.time()
-    results = run(args)
+    results = run(args, start_time)
     print(f"Finished {args.games} games in {time.time() - start_time:0.03f} seconds!")
 
     export(results, start_time, args)

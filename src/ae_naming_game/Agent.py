@@ -1,11 +1,14 @@
 import tensorflow as tf
 import numpy as np
 import random
+import imageio
+import os
 
 from ae_naming_game.Brain import Autoencoder, compute_apply_gradients_once
 
-MIN_DISTANCE = 1
 tf.keras.backend.set_floatx('float64')
+
+MIN_DISTANCE = .5
 
 
 class Agent:
@@ -18,6 +21,18 @@ class Agent:
 
         self.identifier = identifier
         self.vocabulary = [[] for _ in range(num_objects)]
+
+    def print_vocabulary(self, t):
+        output_dir = os.path.join("output", "ae_vocabularies", f"{t}")
+
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        for i, objects in enumerate(self.vocabulary):
+            for j, word in enumerate(objects):
+                inferred_word = np.array(self.brain.decode(word, apply_sigmoid=True)) * 255
+                im = inferred_word.reshape(16, 16).astype('uint8')
+                imageio.imwrite(os.path.join(output_dir, f"a{self.identifier}_o{i}_j.jpg"), im)
 
     def speak(self, obj):
         num_words = len(self.vocabulary[obj])
@@ -47,4 +62,3 @@ class Agent:
 
     def _invent_word(self):
         return np.array(tf.random.normal(shape=(1, self.brain.latent_dim))).astype('float64')
-        # return self.brain.sample()[0]
