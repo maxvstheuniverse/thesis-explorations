@@ -32,7 +32,7 @@ class Agent:
             for j, word in enumerate(objects):
                 inferred_word = np.array(self.brain.decode(word, apply_sigmoid=True)) * 255
                 im = inferred_word.astype('uint8')
-                imageio.imwrite(os.path.join(output_dir, f"a{self.identifier}_o{i}_j.jpg"), im)
+                imageio.imwrite(os.path.join(output_dir, f"a{self.identifier}_o{i}_{j}.jpg"), im)
 
     def speak(self, obj):
         num_words = len(self.vocabulary[obj])
