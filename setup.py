@@ -45,7 +45,8 @@ setup(
     entry_points={
         'console_scripts': [
             'bng=basic_naming_game.__main__:main',
-            'ang=ae_naming_game.__main__:main'
+            'ang=ae_naming_game.__main__:main',
+            'w2v=word2vec.__main__:main'
         ]
     },
 )

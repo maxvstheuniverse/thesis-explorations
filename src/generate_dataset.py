@@ -11,9 +11,8 @@ def rgb2grayscale(rgb):
     return np.array(gray).astype('uint8')
 
 
-def load_images(data_dir):
+def load_images(im_paths):
     """ Load images from the given paths. Paths should including filename and extension. """
-    im_paths = sorted(list(glob.glob(os.path.join(data_dir, "*.jpg"))))
     ims = []
 
     for i, im_path in enumerate(im_paths):
@@ -25,12 +24,18 @@ def load_images(data_dir):
 
 
 def main():
-    data_dir = "data/sets/line_language"
+    data_dir = "data/sets/ll"
+    im_paths = list(glob.glob(os.path.join(data_dir, "*.jpg")))
 
-    x = [rgb2grayscale(im) for im in load_images(data_dir)]
-    np.save('data/sets/line_language.npy', x)
+    text = "\n".join([im_path[13:18].replace('_', ' ') for im_path in im_paths])
 
-    print('Saved dataset as .npy!')
+    with open("data/sets/ll.txt", "w") as text_file:
+        text_file.write(text)
+
+    x = [rgb2grayscale(im) for im in load_images(im_paths)]
+    np.save('data/sets/ll.npy', x)
+
+    print('Saved dataset as .npy and .txt!')
 
 
 if __name__ == '__main__':
