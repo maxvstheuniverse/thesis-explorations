@@ -12,7 +12,7 @@ def sampling(args):
 
 
 class RecurrentVariationalAutoEncoder(tf.keras.Model):
-    def __init__(self, timesteps, original_dim, hidden_dims, latent_dim, name="RVAE", **kwargs):
+    def __init__(self, timesteps, original_dim, hidden_dim, latent_dim, name="RVAE", **kwargs):
         super(RecurrentVariationalAutoEncoder, self).__init__(name=name, **kwargs)
 
         RNN = keras.layers.LSTM
@@ -22,7 +22,7 @@ class RecurrentVariationalAutoEncoder(tf.keras.Model):
         inputs = keras.layers.Input(shape=(timesteps, original_dim,))
 
         # z = RNN(100, return_sequences=True)(inputs)
-        z = RNN(128)(inputs)
+        z = RNN(hidden_dim)(inputs)
 
         # -- encoder outputs
         z_mean = keras.layers.Dense(latent_dim)(z)
@@ -36,7 +36,7 @@ class RecurrentVariationalAutoEncoder(tf.keras.Model):
 
         x = keras.layers.RepeatVector(timesteps)(d_inputs)
         # x = RNN(30, return_sequences=True)(x)
-        x = RNN(128, return_sequences=True)(x)
+        x = RNN(hidden_dim, return_sequences=True)(x)
 
         # -- decoder outputs
         x = keras.layers.TimeDistributed(keras.layers.Dense(original_dim, activation="softmax"))(x)
