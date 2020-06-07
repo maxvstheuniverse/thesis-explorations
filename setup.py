@@ -47,7 +47,8 @@ setup(
             'bng=basic_naming_game.__main__:main',
             'ang=ae_naming_game.__main__:main',
             'w2v=word2vec.__main__:main',
-            'hanna=hanna.__main__:main'
+            'hanna=hanna.__main__:main',
+            'cs=cs_systems.__main__:main'
         ]
     },
 )
