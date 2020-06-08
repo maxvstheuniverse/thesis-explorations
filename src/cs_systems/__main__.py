@@ -3,7 +3,7 @@ import argparse
 import random
 from tensorflow import keras
 
-from cs_systems.lstm_vae import RecurrentVariationalAutoEncoder
+from cs_systems.lstm_vae import VariationalRecurrentAutoEncoder
 
 
 def create_ctable(characters):
@@ -68,7 +68,7 @@ def main(args=None):
 
     batch_size = 64
 
-    vae = RecurrentVariationalAutoEncoder(timesteps, len(characters), hidden_dim, latent_dim)
+    vae = VariationalRecurrentAutoEncoder(timesteps, len(characters), hidden_dim, latent_dim)
     optimizer = keras.optimizers.Adam(learning_rate=1e-3)
 
     vae.compile(optimizer, loss='categorical_crossentropy')

@@ -11,9 +11,9 @@ def sampling(args):
     return z_mean + K.exp(z_log_sigma) * epsilon
 
 
-class RecurrentVariationalAutoEncoder(tf.keras.Model):
+class VariationalRecurrentAutoEncoder(tf.keras.Model):
     def __init__(self, timesteps, original_dim, hidden_dim, latent_dim, name="RVAE", **kwargs):
-        super(RecurrentVariationalAutoEncoder, self).__init__(name=name, **kwargs)
+        super(VariationalRecurrentAutoEncoder, self).__init__(name=name, **kwargs)
 
         RNN = keras.layers.LSTM
         self.original_dim = original_dim
