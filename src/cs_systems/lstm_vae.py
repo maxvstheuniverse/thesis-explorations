@@ -1,6 +1,13 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import backend as K
+from tensorflow.keras.layers import LSTM
+
+
+def repeat_vector(args):
+    """reconstructed_seq = Lambda(repeat_vector, output_shape=(None, size_of_vector))([vector, seq])"""
+    layer_to_repeat, sequence_layer = args[0], args[1]
+    return RepeatVector(K.shape(sequence_layer)[1])(layer_to_repeat)
 
 
 def sampling(args):
@@ -12,14 +19,13 @@ def sampling(args):
 
 
 class VariationalRecurrentAutoEncoder(tf.keras.Model):
-    def __init__(self, timesteps, original_dim, hidden_dim, latent_dim, name="RVAE", **kwargs):
+    def __init__(self, timesteps, original_dim, hidden_dim, latent_dim, RNN=LSTM, name="RVAE", **kwargs):
         super(VariationalRecurrentAutoEncoder, self).__init__(name=name, **kwargs)
 
-        RNN = keras.layers.LSTM
         self.original_dim = original_dim
 
         # -- Encoder
-        inputs = keras.layers.Input(shape=(timesteps, original_dim,))
+        inputs = keras.layers.Input(shape=(None, original_dim,))
 
         # z = RNN(100, return_sequences=True)(inputs)
         z = RNN(hidden_dim)(inputs)
@@ -32,16 +38,18 @@ class VariationalRecurrentAutoEncoder(tf.keras.Model):
         self.encoder = keras.Model(inputs=[inputs], outputs=[z_mean, z_logvar, z], name="Encoder")
 
         # -- Decoder
-        d_inputs = keras.layers.Input(shape=(latent_dim,))
+        encoded = keras.layers.Input(shape=(latent_dim,))
 
-        x = keras.layers.RepeatVector(timesteps)(d_inputs)
+        # x = keras.layers.Lambda(repeat_vector, output_shape=(None, original_dim))([encoded, inputs])
+        x = keras.layers.RepeatVector(timesteps)(encoded)
+
         # x = RNN(30, return_sequences=True)(x)
         x = RNN(hidden_dim, return_sequences=True)(x)
 
         # -- decoder outputs
         x = keras.layers.TimeDistributed(keras.layers.Dense(original_dim, activation="softmax"))(x)
 
-        self.decoder = keras.Model(inputs=[d_inputs], outputs=[x], name="Decoder")
+        self.decoder = keras.Model(inputs=[encoded], outputs=[x], name="Decoder")
 
     def call(self, x):
         z_mean, z_logvar, z = self.encoder(x)
